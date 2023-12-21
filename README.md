@@ -6,6 +6,6 @@ It is a project made by Python for image recognition
  	Train Images
 	Recognize
 	prediction of emotional states
-# Need To update
+# updated 12/21/2023
 	Age prediction
 	Gender  prediction
