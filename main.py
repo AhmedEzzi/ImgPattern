@@ -15,12 +15,11 @@ from tensorflow.keras.models import load_model
 
 
 # Load the pre-trained emotion and gender models
-emotion_model = load_model('C:\Users\illiMercenary\Desktop\Project22/model_v6_23.hdf5')
-gender_model = load_model('C:\Users\illiMercenary\Desktop\Project22/model.h5')
+emotion_model = load_model('C:\Users\illiMercenary\Desktop\Project22\\model_v6_23.hdf5')
+#gender_model = load_model('C:\Users\illiMercenary\Desktop\Project22\\model.h5')
 
 # Define the list of gender labels
 #genders = ['Male', 'Female']
-genders = ['Male', 'Female']
 # Define the list of emotion labels
 emotions = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
 
@@ -37,6 +36,8 @@ def predict_emotion(face_roi):
     return emotions[emotion_label]
 
 
+
+
 # Function to recognize gender based on face proportions
 def recognize_gender(face_roi):
     # Calculate the aspect ratio of the face (width / height)
@@ -48,15 +49,10 @@ def recognize_gender(face_roi):
     if aspect_ratio >= gender_threshold:
         return 'Male'
     else:
-        face_roi_resized = cv2.resize(face_roi, (48, 48))
-        face_roi_normalized = face_roi_resized / 255.0
-        face_roi_final = np.expand_dims(face_roi_normalized, axis=0)
-
-        gender_prediction = gender_model.predict(face_roi_final)
-        gender_label = np.argmax(gender_prediction)
-
-        return genders[gender_label]
+        return 'Female'
     
+
+
 # -------------- Capture_Image code --------------
 
 def is_number(s):
@@ -75,21 +71,19 @@ def is_number(s):
 
     return False
 
+
+
+
 # Function to take images and save with person information
+
+# Take image function
 def takeImages():
     code = input("Enter Your Code: ")
     name = input("Enter Your Name: ")
 
     if is_number(code) and name.isalpha():
-        person_dir = os.path.join("TrainingImage", f"{name}_{code}")
-
-        if not os.path.exists(person_dir):
-            os.makedirs(person_dir, exist_ok=True)
-        else:
-            print("Directory already exists. Skipping creation.")
-
         cam = cv2.VideoCapture(0)
-        harcascadePath = 'C:\Users\illiMercenary\Desktop\Project22/haarcascade_frontalface_default.xml'
+        harcascadePath = 'C:\Users\illiMercenary\Desktop\Project22\\haarcascade_frontalface_default.xml'
         detector = cv2.CascadeClassifier(harcascadePath)
         sampleNum = 0
 
@@ -99,24 +93,29 @@ def takeImages():
             faces = detector.detectMultiScale(gray, 1.3, 5, minSize=(30, 30), flags=cv2.CASCADE_SCALE_IMAGE)
 
             for (x, y, w, h) in faces:
-                cv2.rectangle(img, (x, y), (x+w, y+h), (10, 159, 255), 2)
+                cv2.rectangle(img, (x, y), (x + w, y + h), (10, 159, 255), 2)
+                # incrementing sample number
                 sampleNum = sampleNum + 1
-
-                img_name = f"{name}_{code}_{sampleNum}.jpg"
-                img_path = os.path.join(person_dir, img_name)
-                cv2.imwrite(img_path, gray[y:y+h, x:x+w])
+                # saving the captured face in the dataset folder TrainingImage
+                cv2.imwrite("TrainingImage" + os.sep + name + "." + code + '.' +
+                            str(sampleNum) + ".jpg", gray[y:y + h, x:x + w])
+                # display the frame
                 cv2.imshow('frame', img)
 
+            # wait for 100 milliseconds
             if cv2.waitKey(100) & 0xFF == ord('q'):
                 break
-            elif sampleNum > 100:
+            
+
+            # break if the sample number is more than 100
+            if sampleNum > 100:
                 break
 
         cam.release()
         cv2.destroyAllWindows()
-        res = f"Images Saved for code: {code}, Name: {name}"
+        res = "Images Saved for code : " + code + " Name : " + name
         row = [code, name]
-        with open("StudentDetails"+os.sep+"StudentDetails.csv", 'a+') as csvFile:
+        with open("StudentDetails" + os.sep + "StudentDetails.csv", 'a+') as csvFile:
             writer = csv.writer(csvFile)
             writer.writerow(row)
         csvFile.close()
@@ -125,103 +124,139 @@ def takeImages():
             print("Enter Alphabetical Name")
         if name.isalpha():
             print("Enter Numeric code")
+    mainMenu()
+
 
 # -------------- check_camera code --------------
 
 def camer():
-    window_width = 640
-    window_height = 360
+    import cv2
 
-    face_cascade = cv2.CascadeClassifier('C:\Users\illiMercenary\Desktop\Project22/haarcascade_frontalface_default.xml')
+    # Load the cascade
+    face_cascade = cv2.CascadeClassifier('C:\Users\illiMercenary\Desktop\Project22\\haarcascade_frontalface_default.xml')
 
+    # To capture video from webcam.
     cap = cv2.VideoCapture(0)
 
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, window_width)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, window_height)
-
     while True:
+        # Read the frame
         _, img = cap.read()
+
+        # Convert to grayscale
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(gray, 1.3, 5, minSize=(30, 30), flags=cv2.CASCADE_SCALE_IMAGE)
 
+        # Detect the faces
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5, minSize=(30, 30),flags = cv2.CASCADE_SCALE_IMAGE)
+
+        # Draw the rectangle around each face
         for (x, y, w, h) in faces:
-            cv2.rectangle(img, (x, y), (x + w, y + h), (10, 159, 255), 2)
+            cv2.rectangle(img, (x, y), (x + w, y + h), (10,159,255), 2)
 
+
+        # Display
         cv2.imshow('Webcam Check', img)
 
+        # Stop if escape key is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
+    # Release the VideoCapture object
     cap.release()
     cv2.destroyAllWindows()
+
+
 
 # -------------- Recognize code --------------
 
 def recognize_attendance():
-    recognizer = cv2.face.LBPHFaceRecognizer_create(radius=1, neighbors=8)
-    recognizer.read("TrainingImageLabel"+os.sep+"Trainner.yml")
-    harcascadePath = 'C:\Users\illiMercenary\Desktop\Project22/haarcascade_frontalface_default.xml'
+    recognizer = cv2.face.LBPHFaceRecognizer_create()
+    recognizer.read("TrainingImageLabel" + os.sep + "Trainner.yml")
+    harcascadePath = 'C:\Users\illiMercenary\Desktop\Project22\\haarcascade_frontalface_default.xml'
     faceCascade = cv2.CascadeClassifier(harcascadePath)
-    df = pd.read_csv("StudentDetails"+os.sep+"StudentDetails.csv")
+    df = pd.read_csv("StudentDetails" + os.sep + "StudentDetails.csv")
     font = cv2.FONT_HERSHEY_SIMPLEX
     col_names = ['code', 'Name', 'Date', 'Time']
 
-    window_width = 480
-    window_height = 360
+    window_width = 640
+    window_height = 480
 
     cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     cam.set(3, window_width)
     cam.set(4, window_height)
     minW = 0.1 * window_width
     minH = 0.1 * window_height
-    
+
+    # Load face, age, and gender detection models
+    faceNet = cv2.dnn.readNet("opencv_face_detector_uint8.pb", "opencv_face_detector.pbtxt")
+    ageProto = "age_deploy.prototxt"
+    ageModel = "age_net.caffemodel"
+    genderProto = "gender_deploy.prototxt"
+    genderModel = "gender_net.caffemodel"
+    ageNet = cv2.dnn.readNet(ageModel, ageProto)
+    genderNet = cv2.dnn.readNet(genderModel, genderProto)
+
+    MODEL_MEAN_VALUES = (78.4263377603, 87.7689143744, 114.895847746)
+    ageList = ['(0-2)', '(4-6)', '(8-12)', '(15-20)', '(25-32)', '(38-43)', '(48-53)', '(60-100)']
+    genderList = ['Male', 'Female']
+
     while True:
         ret, im = cam.read()
         gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
         faces = faceCascade.detectMultiScale(gray, 1.2, 5, minSize=(int(minW), int(minH)), flags=cv2.CASCADE_SCALE_IMAGE)
 
         for (x, y, w, h) in faces:
-            cv2.rectangle(im, (x, y), (x+w, y+h), (10, 159, 255), 2)
-            code, conf = recognizer.predict(gray[y:y+h, x:x+w])
+            cv2.rectangle(im, (x, y), (x + w, y + h), (10, 159, 255), 2)
+            code, conf = recognizer.predict(gray[y:y + h, x:x + w])
 
             if conf < 100:
-                aa = df.loc[df['code'] == code]['Name'].values
+                aa = df.loc[df['code'] == code]['Name'].values[0]  # Extract the actual name from the values array
                 confstr = "  {0}%".format(round(100 - conf))
-                tt = str(code) + "-" + aa
+                tt = str(code) + "-" + str(aa)
             else:
                 code = '  Unknown  '
                 tt = str(code)
                 confstr = "  {0}%".format(round(100 - conf))
 
-            if (100-conf) > 67:
+            if (100 - conf) > 67:
                 ts = time.time()
                 date = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
                 timeStamp = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
-                aa = str(aa)[2:-2]
-
-            tt = str(tt)[2:-2]
-            if (100-conf) > 67:
+                aa = str(aa)
+                tt = str(tt)
                 tt = tt + " [Identified]"
-                cv2.putText(im, str(tt), (x+5, y-5), font, 1, (255, 255, 255), 2)
+                cv2.putText(im, str(tt), (x + 5, y - 5), font, 1, (255, 255, 255), 2)
             else:
                 cv2.putText(im, str(tt), (x + 5, y - 5), font, 1, (255, 255, 255), 2)
 
-            if (100-conf) > 62:
+            if (100 - conf) > 62:
                 cv2.putText(im, str(confstr), (x + 5, y + h - 5), font, 1, (0, 255, 0), 1)
-            elif (100-conf) > 50:
+            elif (100 - conf) > 50:
                 cv2.putText(im, str(confstr), (x + 5, y + h - 5), font, 1, (0, 255, 255), 1)
             else:
                 cv2.putText(im, str(confstr), (x + 5, y + h - 5), font, 1, (0, 0, 255), 1)
 
-            # Call the prediction functions
-     emotion_label = predict_emotion(gray[y:y+h, x:x+w])
-    gender_label = recognize_gender(gray[y:y+h, x:x+w])
+            # Extract the face region
+            face = im[y:y + h, x:x + w]
 
-    emotion_text = f'Emotion: {emotion_label}'
-    cv2.putText(im, emotion_text, (x, y+h+60), font, 0.8, (0, 255, 0), 2)
+            # Preprocess the face for age and gender prediction
+            blob = cv2.dnn.blobFromImage(face, 1.0, (227, 227), MODEL_MEAN_VALUES, swapRB=False)
 
-    gender_text = f'Gender: {gender_label}'
-    cv2.putText(im, gender_text, (x, y+h+120), font, 0.8, (0, 255, 0), 2)
+            # Predict gender
+            genderNet.setInput(blob)
+            genderPred = genderNet.forward()
+            gender = genderList[genderPred[0].argmax()]
+
+            # Predict age
+            ageNet.setInput(blob)
+            agePred = ageNet.forward()
+            age = ageList[agePred[0].argmax()]
+
+            # Display gender and age labels
+            gender_text = f'Gender: {gender}'
+            age_text = f'Age: {age}'
+            cv2.putText(im, gender_text, (x, y + h + 60), font, 0.8, (0, 255, 0), 2)
+            cv2.putText(im, age_text, (x, y + h + 120), font, 0.8, (0, 255, 0), 2)
+
         cv2.imshow('code', im)
 
         if cv2.waitKey(1) == ord('q'):
@@ -230,6 +265,7 @@ def recognize_attendance():
     print("Done!")
     cam.release()
     cv2.destroyAllWindows()
+
 
 # -------------- Train_Image code --------------
 
@@ -253,7 +289,7 @@ def getImagesAndLabels(path):
 
 def TrainImages():
     recognizer = cv2.face.LBPHFaceRecognizer_create()
-    harcascadePath = 'C:\Users\illiMercenary\Desktop\Project22/haarcascade_frontalface_default.xml'
+    harcascadePath = 'C:\Users\illiMercenary\Desktop\Project22\\haarcascade_frontalface_default.xml'
 
     detector = cv2.CascadeClassifier(harcascadePath)
     faces, codes = getImagesAndLabels("TrainingImage")
@@ -299,12 +335,13 @@ def mainMenu():
                 break
             elif choice == 2:
                 CaptureFaces()
+                mainMenu()
                 break
             elif choice == 3:
                 Trainimages()
                 break
             elif choice == 4:
-                RecognizeFaces()
+                recognize_attendance()
                 break
             elif choice == 5:
                 print("End!!")
@@ -314,7 +351,7 @@ def mainMenu():
                 print("Invalid Choice. Enter 1-4")
                 mainMenu()
         except ValueError:
-            print("Invalid Choice. Enter 1-4\n Try Again")
+            print("Invalid Choice. Enter 1-4 Try Again")
     exit
 
 def checkCamera():
@@ -324,8 +361,11 @@ def checkCamera():
 
 def CaptureFaces():
     takeImages()
+    camer()  # Add this line to open the camera after capturing images
+
     key = input("Enter any key to return to the main menu")
     mainMenu()
+
 
 def Trainimages():
     TrainImages()
