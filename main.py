@@ -16,7 +16,7 @@ from tensorflow.keras.models import load_model
 
 # Load the pre-trained emotion and gender models
 emotion_model = load_model('C:\Users\illiMercenary\Desktop\Project22\\model_v6_23.hdf5')
-#gender_model = load_model('C:\Users\illiMercenary\Desktop\Project22\\model.h5')
+#gender_model = load_model('C:\Users\illiMercenary\Desktop/Project22/model.h5')
 
 # Define the list of gender labels
 #genders = ['Male', 'Female']
@@ -83,7 +83,7 @@ def takeImages():
 
     if is_number(code) and name.isalpha():
         cam = cv2.VideoCapture(0)
-        harcascadePath = 'C:\Users\illiMercenary\Desktop\Project22\\haarcascade_frontalface_default.xml'
+        harcascadePath = 'C:\Users\illiMercenary\Desktop\\Project22\\haarcascade_frontalface_default.xml'
         detector = cv2.CascadeClassifier(harcascadePath)
         sampleNum = 0
 
@@ -133,7 +133,7 @@ def camer():
     import cv2
 
     # Load the cascade
-    face_cascade = cv2.CascadeClassifier('C:\Users\illiMercenary\Desktop\Project22\\haarcascade_frontalface_default.xml')
+    face_cascade = cv2.CascadeClassifier('C:\Users\illiMercenary\Desktop\\Project22\\haarcascade_frontalface_default.xml')
 
     # To capture video from webcam.
     cap = cv2.VideoCapture(0)
@@ -166,12 +166,13 @@ def camer():
 
 
 
+
 # -------------- Recognize code --------------
 
 def recognize_attendance():
     recognizer = cv2.face.LBPHFaceRecognizer_create()
     recognizer.read("TrainingImageLabel" + os.sep + "Trainner.yml")
-    harcascadePath = 'C:\Users\illiMercenary\Desktop\Project22\\haarcascade_frontalface_default.xml'
+    harcascadePath = 'C:\Users\illiMercenary\Desktop\\Project22\\haarcascade_frontalface_default.xml'
     faceCascade = cv2.CascadeClassifier(harcascadePath)
     df = pd.read_csv("StudentDetails" + os.sep + "StudentDetails.csv")
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -196,7 +197,7 @@ def recognize_attendance():
     genderNet = cv2.dnn.readNet(genderModel, genderProto)
 
     MODEL_MEAN_VALUES = (78.4263377603, 87.7689143744, 114.895847746)
-    ageList = ['(0-2)', '(4-6)', '(8-12)', '(15-20)', '(25-32)', '(38-43)', '(48-53)', '(60-100)']
+    ageList = ['(1-5)', '(6-10)', '(11-19)', '(20-30)', '(31-42)', '(43-53)', '(54-63)', '(64-100)']
     genderList = ['Male', 'Female']
 
     while True:
@@ -238,6 +239,12 @@ def recognize_attendance():
             # Extract the face region
             face = im[y:y + h, x:x + w]
 
+            # Predict emotion
+            emotion_label = predict_emotion(gray[y:y+h, x:x+w])
+
+            emotion_label = predict_emotion(gray[y:y+h, x:x+w])
+            emotion_text = f'Emotion: {emotion_label}'
+
             # Preprocess the face for age and gender prediction
             blob = cv2.dnn.blobFromImage(face, 1.0, (227, 227), MODEL_MEAN_VALUES, swapRB=False)
 
@@ -251,11 +258,14 @@ def recognize_attendance():
             agePred = ageNet.forward()
             age = ageList[agePred[0].argmax()]
 
-            # Display gender and age labels
+            # Display gender, age, and emotion labels
             gender_text = f'Gender: {gender}'
             age_text = f'Age: {age}'
             cv2.putText(im, gender_text, (x, y + h + 60), font, 0.8, (0, 255, 0), 2)
             cv2.putText(im, age_text, (x, y + h + 120), font, 0.8, (0, 255, 0), 2)
+            cv2.putText(im, emotion_text, (x, y + h + 180), font, 0.8, (0, 255, 0), 2)
+
+            
 
         cv2.imshow('code', im)
 
@@ -289,7 +299,7 @@ def getImagesAndLabels(path):
 
 def TrainImages():
     recognizer = cv2.face.LBPHFaceRecognizer_create()
-    harcascadePath = 'C:\Users\illiMercenary\Desktop\Project22\\haarcascade_frontalface_default.xml'
+    harcascadePath = 'C:\Users\illiMercenary\Desktop\\Project22\\haarcascade_frontalface_default.xml'
 
     detector = cv2.CascadeClassifier(harcascadePath)
     faces, codes = getImagesAndLabels("TrainingImage")
@@ -346,12 +356,10 @@ def mainMenu():
             elif choice == 5:
                 print("End!!")
                 break
-                mainMenu()
             else:
-                print("Invalid Choice. Enter 1-4")
-                mainMenu()
+                print("Invalid Choice. Enter 1-5")
         except ValueError:
-            print("Invalid Choice. Enter 1-4 Try Again")
+            print("Invalid Input. Enter a number (1-5) Try Again")
     exit
 
 def checkCamera():
